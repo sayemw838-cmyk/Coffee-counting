@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Coffee Counter</title>
+<style>
+  :root {
+    --bg: #1a1210;
+    --bg2: #221714;
+    --card: #2a1c18;
+    --card2: #321f1a;
+    --text: #f0e6dc;
+    --muted: #9e8478;
+    --accent: #c4874a;
+    --accent-dim: #a06838;
+    --border: #3d2820;
+    --border2: #4a3028;
+    --shadow: rgba(0,0,0,0.4);
+    --bar: #c4874a;
+    --bar-bg: #3d2820;
+    --toast-bg: #2a1c18;
+    --toast-border: #c4874a;
+    --input-bg: #1a1210;
+    --btn-del: #7a2828;
+    --btn-del-hover: #9a3030;
+    --overlay: rgba(10,6,4,0.75);
+    --ama-color: #c4874a;
+    --nes-color: #6a9fc0;
+  }
+  [data-theme="light"] {
+    --bg: #f5efe8;
+    --bg2: #ede5db;
+    --card: #fffaf5;
+    --card2: #fdf5ec;
+    --text: #2a1a10;
+    --muted: #7a5c48;
+    --accent: #9a5c28;
+    --accent-dim: #7a4818;
+    --border: #e0d0c0;
+    --border2: #d0bfac;
+    --shadow: rgba(80,40,20,0.12);
+    --bar: #9a5c28;
+    --bar-bg: #e8ddd0;
+    --toast-bg: #fffaf5;
+    --toast-border: #9a5c28;
+    --input-bg: #f5efe8;
+    --btn-del: #c0392b;
+    --btn-del-hover: #a93226;
+    --overlay: rgba(60,30,15,0.5);
+    --ama-color: #9a5c28;
+    --nes-color: #2e6a8a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 0.25s, color 0.25s;
+  }
+  .app { max-width: 480px; margin: 0 auto; padding: 0 0 80px; }
+
+  /* HEADER */
+  .header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .header-icon { font-size: 26px; line-height: 1; }
+  .header-title-block { flex: 1; }
+  .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); line-height: 1.1; }
+  .header-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .settings-btn {
+    background: var(--card); border: 1px solid var(--border); color: var(--muted);
+    width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+    transition: background 0.15s, color 0.15s, border-color 0.25s; flex-shrink: 0;
+  }
+  .settings-btn:hover { background: var(--card2); color: var(--text); }
+  .settings-btn:active { transform: scale(0.93); }
+
+  .section { padding: 16px 16px 0; }
+
+  /* COUNTER CARD */
+  .counter-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 18px 20px 20px;
+    box-shadow: 0 2px 12px var(--shadow);
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .counter-date { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
+
+  /* BRAND SWITCHER */
+  .brand-switcher { display: flex; gap: 8px; margin-bottom: 16px; }
+  .brand-tab {
+    flex: 1; padding: 10px 8px; border-radius: 11px;
+    border: 1px solid var(--border2); background: var(--card2);
+    color: var(--muted); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; text-align: center; line-height: 1.3;
+  }
+  .brand-tab .brand-name { display: block; font-weight: 600; font-size: 14px; }
+  .brand-tab .brand-detail { display: block; font-size: 10px; margin-top: 2px; opacity: 0.7; }
+  .brand-tab.active-ama { background: var(--ama-color); border-color: var(--ama-color); color: #fff; }
+  .brand-tab.active-nes { background: var(--nes-color); border-color: var(--nes-color); color: #fff; }
+  .brand-tab.active-ama .brand-detail,
+  .brand-tab.active-nes .brand-detail { opacity: 0.85; }
+
+  .counter-main { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 16px; }
+  .count-btn {
+    width: 52px; height: 52px; border-radius: 14px; border: 1px solid var(--border2);
+    background: var(--card2); color: var(--text); font-size: 26px; font-weight: 300;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.12s, transform 0.1s, border-color 0.25s;
+    user-select: none; -webkit-user-select: none; flex-shrink: 0;
+  }
+  .count-btn:hover { background: var(--border2); }
+  .count-btn:active { transform: scale(0.9); }
+  .count-display { text-align: center; flex: 1; }
+  .count-number { font-size: 72px; font-weight: 800; color: var(--accent); line-height: 1; letter-spacing: -3px; transition: color 0.25s; }
+  .count-number.color-ama { color: var(--ama-color); }
+  .count-number.color-nes { color: var(--nes-color); }
+  .count-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .count-breakdown { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ADD BUTTONS */
+  .add-btns { display: flex; gap: 8px; }
+  .add-btn {
+    flex: 1; border: none; border-radius: 13px; padding: 13px 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: filter 0.15s, transform 0.1s; color: #fff; letter-spacing: 0.1px;
+  }
+  .add-btn:active { transform: scale(0.97); }
+  .add-btn-ama { background: var(--ama-color); }
+  .add-btn-ama:hover { filter: brightness(0.88); }
+  .add-btn-nes { background: var(--nes-color); }
+  .add-btn-nes:hover { filter: brightness(0.88); }
+
+  /* STAT CARDS */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 14px 12px;
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .stat-label { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-size: 24px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  /* BRAND BREAKDOWN CARD */
+  .breakdown-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px;
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .breakdown-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+  .breakdown-row + .breakdown-row { border-top: 1px solid var(--border); }
+  .breakdown-brand { display: flex; align-items: center; gap: 8px; }
+  .brand-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .brand-dot-ama { background: var(--ama-color); }
+  .brand-dot-nes { background: var(--nes-color); }
+  .breakdown-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .breakdown-detail { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .breakdown-right { text-align: right; }
+  .breakdown-packets { font-size: 18px; font-weight: 800; color: var(--text); }
+  .breakdown-pkt-label { font-size: 10px; color: var(--muted); }
+
+  /* SECTION TITLE */
+  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
+
+  /* CHART */
+  .chart-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px 14px 12px;
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin-bottom: 8px; }
+  .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .chart-count { font-size: 10px; color: var(--muted); font-weight: 600; min-height: 14px; display: flex; align-items: flex-end; }
+  .chart-bar-wrap { width: 100%; background: var(--bar-bg); border-radius: 4px 4px 0 0; overflow: hidden; transition: background 0.25s; }
+  .chart-bar-stack { width: 100%; display: flex; flex-direction: column-reverse; }
+  .chart-bar-seg { width: 100%; transition: height 0.4s cubic-bezier(.4,0,.2,1); }
+  .chart-days { display: flex; gap: 6px; }
+  .chart-day-label { flex: 1; text-align: center; font-size: 10px; color: var(--muted); font-weight: 500; border-top: 1px solid var(--border); padding-top: 6px; transition: color 0.25s; }
+  .chart-day-label.today { color: var(--accent); font-weight: 700; }
+
+  /* HISTORY */
+  .history-list { display: flex; flex-direction: column; gap: 8px; }
+  .history-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .history-item.today-item { border-color: var(--accent); }
+  .history-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .history-date { font-size: 13px; font-weight: 600; color: var(--text); }
+  .history-totals { text-align: right; flex-shrink: 0; }
+  .history-total-pkts { font-size: 18px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .history-total-label { font-size: 10px; color: var(--muted); }
+  .history-brands { display: flex; gap: 6px; flex-wrap: wrap; }
+  .history-brand-pill {
+    display: flex; align-items: center; gap: 5px;
+    background: var(--card2); border: 1px solid var(--border2);
+    border-radius: 20px; padding: 3px 9px 3px 7px; font-size: 11px; color: var(--muted);
+  }
+  .history-brand-pill .brand-dot { width: 6px; height: 6px; }
+  .history-brand-count { font-weight: 700; color: var(--text); margin-right: 2px; }
+  .history-empty {
+    text-align: center; padding: 28px 16px; color: var(--muted); font-size: 14px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    transition: background 0.25s, border-color 0.25s;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: var(--overlay); z-index: 100;
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0; width: 100%; max-width: 480px;
+    padding: 0 0 env(safe-area-inset-bottom, 16px);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1), background 0.25s, border-color 0.25s;
+    max-height: 92vh; overflow-y: auto;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 18px 14px; position: sticky; top: 0; background: var(--card);
+    z-index: 1; border-bottom: 1px solid var(--border);
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--text); }
+  .modal-close {
+    background: var(--card2); border: 1px solid var(--border); color: var(--muted);
+    width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s, border-color 0.25s;
+  }
+  .modal-close:hover { color: var(--text); background: var(--border); }
+  .modal-body { padding: 16px 18px 18px; }
+
+  .settings-section { margin-bottom: 20px; }
+  .settings-section-label { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 10px; }
+
+  /* THEME TOGGLE */
+  .theme-toggle { display: flex; gap: 8px; }
+  .theme-btn {
+    flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border2);
+    background: var(--card2); color: var(--muted); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; text-align: center;
+  }
+  .theme-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .theme-btn:hover:not(.active) { color: var(--text); border-color: var(--muted); }
+
+  /* SETTINGS BRAND CARDS */
+  .brand-settings-grid { display: flex; flex-direction: column; gap: 12px; }
+  .brand-setting-card {
+    background: var(--card2); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 12px 14px;
+  }
+  .brand-setting-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .brand-setting-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .brand-setting-sub { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+  .field { margin-bottom: 10px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; display: block; font-weight: 500; }
+  .field input {
+    width: 100%; background: var(--input-bg); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 9px; padding: 9px 12px; font-size: 15px;
+    font-family: inherit; outline: none; transition: border-color 0.15s, background 0.25s;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+  .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+  .btn-save {
+    width: 100%; background: var(--accent); color: #fff; border: none;
+    border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s, transform 0.1s;
+  }
+  .btn-save:hover { background: var(--accent-dim); }
+  .btn-save:active { transform: scale(0.97); }
+  .btn-delete {
+    width: 100%; background: transparent; color: var(--btn-del); border: 1px solid var(--btn-del);
+    border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background 0.15s, color 0.15s, transform 0.1s;
+  }
+  .btn-delete:hover { background: var(--btn-del); color: #fff; }
+  .btn-delete:active { transform: scale(0.97); }
+
+  /* CONFIRM */
+  .confirm-overlay {
+    position: fixed; inset: 0; background: var(--overlay); z-index: 200;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .confirm-overlay.open { opacity: 1; pointer-events: all; }
+  .confirm-box {
+    background: var(--card); border: 1px solid var(--border2); border-radius: 16px;
+    padding: 24px; width: 100%; max-width: 320px; text-align: center;
+    transform: scale(0.92); transition: transform 0.2s, background 0.25s, border-color 0.25s;
+  }
+  .confirm-overlay.open .confirm-box { transform: scale(1); }
+  .confirm-icon { font-size: 32px; margin-bottom: 10px; }
+  .confirm-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .confirm-text { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+  .confirm-actions { display: flex; gap: 10px; }
+  .confirm-cancel {
+    flex: 1; background: var(--card2); border: 1px solid var(--border2); color: var(--text);
+    padding: 11px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: background 0.15s, border-color 0.25s;
+  }
+  .confirm-cancel:hover { background: var(--border); }
+  .confirm-proceed {
+    flex: 1; background: var(--btn-del); border: none; color: #fff;
+    padding: 11px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .confirm-proceed:hover { background: var(--btn-del-hover); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--toast-bg); border: 1px solid var(--toast-border); color: var(--text);
+    padding: 11px 20px; border-radius: 100px; font-size: 14px; font-weight: 500;
+    z-index: 300; pointer-events: none; opacity: 0;
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1), opacity 0.3s, background 0.25s, border-color 0.25s;
+    white-space: nowrap; box-shadow: 0 4px 20px var(--shadow);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (min-width: 480px) {
+    .app { padding-bottom: 40px; }
+    .modal { border-radius: 20px; margin-bottom: 40px; max-height: 85vh; }
+    .modal-overlay { align-items: center; }
+  }
+</style>
+</head>
+<body>
+<div class="app" role="main">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-icon" aria-hidden="true">☕</div>
+    <div class="header-title-block">
+      <div class="header-title">Coffee Counter</div>
+      <div class="header-sub">Track your daily coffee &amp; caffeine</div>
+    </div>
+    <button class="settings-btn" id="settingsBtn" aria-label="Open settings">⚙</button>
+  </header>
+
+  <!-- DAILY COUNTER -->
+  <div class="section">
+    <div class="counter-card">
+      <div class="counter-date" id="todayDate"></div>
+
+      <!-- Brand switcher -->
+      <div class="brand-switcher">
+        <button class="brand-tab active-ama" id="tabAma" aria-pressed="true">
+          <span class="brand-name">AMA Classic</span>
+          <span class="brand-detail">0.75 g · ৳5 · ~27 mg</span>
+        </button>
+        <button class="brand-tab" id="tabNes" aria-pressed="false">
+          <span class="brand-name">Nescafé</span>
+          <span class="brand-detail">~1 g · ৳5 · ~35 mg</span>
+        </button>
+      </div>
+
+      <div class="counter-main">
+        <button class="count-btn" id="minusBtn" aria-label="Remove one packet">−</button>
+        <div class="count-display">
+          <div class="count-number color-ama" id="countNum">0</div>
+          <div class="count-label" id="countLabel">AMA packets today</div>
+          <div class="count-breakdown" id="countBreakdown"></div>
+        </div>
+        <button class="count-btn" id="plusBtn" aria-label="Add one packet">+</button>
+      </div>
+
+      <div class="add-btns">
+        <button class="add-btn add-btn-ama" id="addAmaBtn" aria-label="Add one AMA Classic packet">☕ AMA +1</button>
+        <button class="add-btn add-btn-nes" id="addNesBtn" aria-label="Add one Nescafé packet">☕ Nescafé +1</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="section" style="margin-top:12px;">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">Caffeine</div>
+        <div class="stat-value" id="statCaffeine">0 mg</div>
+        <div class="stat-sub">today (est.)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cost today</div>
+        <div class="stat-value" id="statCost">৳0</div>
+        <div class="stat-sub" id="statCostSub">at ৳5/packet</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">7-day packets</div>
+        <div class="stat-value" id="stat7Packets">0</div>
+        <div class="stat-sub">last 7 days</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">7-day caffeine</div>
+        <div class="stat-value" id="stat7Caffeine">0 mg</div>
+        <div class="stat-sub">est. total</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TODAY BREAKDOWN -->
+  <div class="section" style="margin-top:10px;" id="breakdownSection">
+    <div class="breakdown-card" id="breakdownCard"></div>
+  </div>
+
+  <!-- CHART -->
+  <div class="section" style="margin-top:12px;">
+    <div class="section-title">Last 7 days</div>
+    <div class="chart-card">
+      <div class="chart-bars" id="chartBars"></div>
+      <div class="chart-days" id="chartDays"></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="section" style="margin-top:12px;">
+    <div class="section-title">Recent history</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-label="Settings">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title">Settings</div>
+      <button class="modal-close" id="modalClose" aria-label="Close settings">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-section">
+        <div class="settings-section-label">Appearance</div>
+        <div class="theme-toggle">
+          <button class="theme-btn" id="lightBtn" aria-pressed="false">☀ Light</button>
+          <button class="theme-btn active" id="darkBtn" aria-pressed="true">🌙 Dark</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-label">Coffee brands</div>
+        <div class="brand-settings-grid">
+          <!-- AMA -->
+          <div class="brand-setting-card">
+            <div class="brand-setting-header">
+              <div class="brand-dot brand-dot-ama"></div>
+              <div class="brand-setting-name">AMA Classic</div>
+              <div class="brand-setting-sub">0.75 g sachet</div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="amaPriceInput">Price per packet (৳)</label>
+              <input type="number" id="amaPriceInput" min="0" step="0.5" value="5" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label class="field-label" for="amaCaffeineInput">Est. caffeine per packet (mg)</label>
+              <input type="number" id="amaCaffeineInput" min="0" step="1" value="27" inputmode="decimal">
+              <div class="field-hint">~27 mg estimated for 0.75 g sachet. AMA Coffee has not published an official caffeine value.</div>
+            </div>
+          </div>
+          <!-- NESCAFE -->
+          <div class="brand-setting-card">
+            <div class="brand-setting-header">
+              <div class="brand-dot brand-dot-nes"></div>
+              <div class="brand-setting-name">Nescafé</div>
+              <div class="brand-setting-sub">~1 g sachet</div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="nesPriceInput">Price per packet (৳)</label>
+              <input type="number" id="nesPriceInput" min="0" step="0.5" value="5" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label class="field-label" for="nesCaffeineInput">Est. caffeine per packet (mg)</label>
+              <input type="number" id="nesCaffeineInput" min="0" step="1" value="35" inputmode="decimal">
+              <div class="field-hint">~35 mg estimated for ~1 g sachet. Exact caffeine content varies by blend.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-save" id="saveSettingsBtn">Save settings</button>
+        <button class="btn-delete" id="deleteHistoryBtn">Delete all coffee history</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay" role="alertdialog" aria-modal="true">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">Delete all history?</div>
+    <div class="confirm-text">This will permanently remove all recorded coffee data. This cannot be undone.</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" id="confirmCancel">Cancel</button>
+      <button class="confirm-proceed" id="confirmProceed">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  const STORAGE_KEY = 'coffeeCounter_v2';
+
+  const BRANDS = {
+    ama: { name: 'AMA Classic', defaultPrice: 5, defaultCaffeine: 27 },
+    nes: { name: 'Nescafé',     defaultPrice: 5, defaultCaffeine: 35 }
+  };
+
+  function getDefaults() {
+    return {
+      theme: 'dark',
+      brands: {
+        ama: { price: 5, caffeine: 27 },
+        nes: { price: 5, caffeine: 35 }
+      },
+      days: {}
+      // days structure: { "2026-09-27": { ama: 2, nes: 1 } }
+    };
+  }
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return getDefaults();
+      const parsed = JSON.parse(raw);
+      const def = getDefaults();
+      return {
+        theme: parsed.theme || def.theme,
+        brands: {
+          ama: Object.assign({}, def.brands.ama, parsed.brands?.ama),
+          nes: Object.assign({}, def.brands.nes, parsed.brands?.nes)
+        },
+        days: parsed.days || {}
+      };
+    } catch { return getDefaults(); }
+  }
+
+  function saveData() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+  }
+
+  function getLocalDateStr(date) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  }
+
+  function fmt(n) { return Number.isInteger(n) ? n.toString() : parseFloat(n.toFixed(1)).toString(); }
+  function fmtMg(mg) { return `${fmt(mg)} mg`; }
+  function fmtCost(cost) { return `৳${fmt(cost)}`; }
+
+  const DAYS_SHORT  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const DAYS_LONG   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function fmtDateLabel(dateStr) {
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const dt = new Date(y,m-1,d);
+    return `${DAYS_SHORT[dt.getDay()]}, ${MONTHS_SHORT[m-1]} ${d}`;
+  }
+
+  // State
+  let data = loadData();
+  let activeBrand = 'ama'; // which brand the +/- buttons target
+  let toastTimer = null;
+
+  // DOM
+  const todayDateEl    = document.getElementById('todayDate');
+  const countNumEl     = document.getElementById('countNum');
+  const countLabelEl   = document.getElementById('countLabel');
+  const countBreakdown = document.getElementById('countBreakdown');
+  const statCaffeineEl = document.getElementById('statCaffeine');
+  const statCostEl     = document.getElementById('statCost');
+  const statCostSub    = document.getElementById('statCostSub');
+  const stat7PktsEl    = document.getElementById('stat7Packets');
+  const stat7CafEl     = document.getElementById('stat7Caffeine');
+  const breakdownCard  = document.getElementById('breakdownCard');
+  const breakdownSect  = document.getElementById('breakdownSection');
+  const chartBarsEl    = document.getElementById('chartBars');
+  const chartDaysEl    = document.getElementById('chartDays');
+  const historyList    = document.getElementById('historyList');
+  const modalOverlay   = document.getElementById('modalOverlay');
+  const confirmOverlay = document.getElementById('confirmOverlay');
+  const toast          = document.getElementById('toast');
+  const tabAma         = document.getElementById('tabAma');
+  const tabNes         = document.getElementById('tabNes');
+  const lightBtn       = document.getElementById('lightBtn');
+  const darkBtn        = document.getElementById('darkBtn');
+
+  function getTodayStr() { return getLocalDateStr(new Date()); }
+
+  function getDayData(dateStr) {
+    return data.days[dateStr] || { ama: 0, nes: 0 };
+  }
+
+  function getTodayBrandCount(brand) { return getDayData(getTodayStr())[brand] || 0; }
+  function getTodayTotal() {
+    const d = getDayData(getTodayStr());
+    return (d.ama || 0) + (d.nes || 0);
+  }
+
+  function adjustBrandCount(brand, delta) {
+    const today = getTodayStr();
+    if (!data.days[today]) data.days[today] = { ama: 0, nes: 0 };
+    const newVal = Math.max(0, (data.days[today][brand] || 0) + delta);
+    data.days[today][brand] = newVal;
+    // clean up empty days
+    if (data.days[today].ama === 0 && data.days[today].nes === 0) delete data.days[today];
+    saveData();
+  }
+
+  function getLast7Dates() {
+    const dates = [];
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      dates.push(getLocalDateStr(d));
+    }
+    return dates;
+  }
+
+  function calcDayCaffeine(dayObj) {
+    return (dayObj.ama || 0) * data.brands.ama.caffeine + (dayObj.nes || 0) * data.brands.nes.caffeine;
+  }
+  function calcDayCost(dayObj) {
+    return (dayObj.ama || 0) * data.brands.ama.price + (dayObj.nes || 0) * data.brands.nes.price;
+  }
+  function calcDayTotal(dayObj) { return (dayObj.ama || 0) + (dayObj.nes || 0); }
+
+  function setActiveBrand(brand) {
+    activeBrand = brand;
+    tabAma.className = 'brand-tab' + (brand === 'ama' ? ' active-ama' : '');
+    tabNes.className = 'brand-tab' + (brand === 'nes' ? ' active-nes' : '');
+    tabAma.setAttribute('aria-pressed', brand === 'ama');
+    tabNes.setAttribute('aria-pressed', brand === 'nes');
+    // Update counter display color
+    countNumEl.className = 'count-number color-' + brand;
+    countLabelEl.textContent = (brand === 'ama' ? 'AMA' : 'Nescafé') + ' packets today';
+    updateCountDisplay();
+  }
+
+  function updateCountDisplay() {
+    countNumEl.textContent = getTodayBrandCount(activeBrand);
+    const other = activeBrand === 'ama' ? 'nes' : 'ama';
+    const otherCount = getTodayBrandCount(other);
+    const otherName = activeBrand === 'ama' ? 'Nescafé' : 'AMA';
+    countBreakdown.textContent = otherCount > 0 ? `+ ${otherCount} ${otherName} today` : '';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    lightBtn.classList.toggle('active', theme === 'light');
+    darkBtn.classList.toggle('active', theme === 'dark');
+    lightBtn.setAttribute('aria-pressed', theme === 'light');
+    darkBtn.setAttribute('aria-pressed', theme === 'dark');
+  }
+
+  function renderAll() {
+    const today = getTodayStr();
+    const now = new Date();
+    todayDateEl.textContent = `${DAYS_LONG[now.getDay()]}, ${MONTHS_SHORT[now.getMonth()]} ${now.getDate()}`;
+
+    updateCountDisplay();
+
+    const todayObj = getDayData(today);
+    const todayTotal = calcDayTotal(todayObj);
+    const todayCaf   = calcDayCaffeine(todayObj);
+    const todayCost  = calcDayCost(todayObj);
+
+    statCaffeineEl.textContent = fmtMg(todayCaf);
+    statCostEl.textContent = fmtCost(todayCost);
+    statCostSub.textContent = `৳${fmt(data.brands.ama.price)} AMA · ৳${fmt(data.brands.nes.price)} Nescafé`;
+
+    // 7-day
+    const last7 = getLast7Dates();
+    let t7pkts = 0, t7caf = 0;
+    last7.forEach(d => {
+      const obj = getDayData(d);
+      t7pkts += calcDayTotal(obj);
+      t7caf  += calcDayCaffeine(obj);
+    });
+    stat7PktsEl.textContent = t7pkts;
+    stat7CafEl.textContent  = fmtMg(t7caf);
+
+    // Today breakdown card
+    if (todayTotal > 0) {
+      breakdownSect.style.display = '';
+      let html = '';
+      if (todayObj.ama > 0) {
+        html += `<div class="breakdown-row">
+          <div class="breakdown-brand">
+            <div class="brand-dot brand-dot-ama"></div>
+            <div>
+              <div class="breakdown-name">AMA Classic</div>
+              <div class="breakdown-detail">${fmtMg(todayObj.ama * data.brands.ama.caffeine)} est. · ${fmtCost(todayObj.ama * data.brands.ama.price)}</div>
+            </div>
+          </div>
+          <div class="breakdown-right">
+            <div class="breakdown-packets">${todayObj.ama}</div>
+            <div class="breakdown-pkt-label">packets</div>
+          </div>
+        </div>`;
+      }
+      if (todayObj.nes > 0) {
+        html += `<div class="breakdown-row">
+          <div class="breakdown-brand">
+            <div class="brand-dot brand-dot-nes"></div>
+            <div>
+              <div class="breakdown-name">Nescafé</div>
+              <div class="breakdown-detail">${fmtMg(todayObj.nes * data.brands.nes.caffeine)} est. · ${fmtCost(todayObj.nes * data.brands.nes.price)}</div>
+            </div>
+          </div>
+          <div class="breakdown-right">
+            <div class="breakdown-packets">${todayObj.nes}</div>
+            <div class="breakdown-pkt-label">packets</div>
+          </div>
+        </div>`;
+      }
+      breakdownCard.innerHTML = html;
+    } else {
+      breakdownSect.style.display = 'none';
+    }
+
+    // Chart — stacked bars
+    const maxTotal = Math.max(...last7.map(d => calcDayTotal(getDayData(d))), 1);
+    chartBarsEl.innerHTML = '';
+    chartDaysEl.innerHTML = '';
+    last7.forEach(dateStr => {
+      const obj = getDayData(dateStr);
+      const total = calcDayTotal(obj);
+      const isToday = dateStr === today;
+      const totalPct = (total / maxTotal) * 100;
+      const amaPct = total > 0 ? ((obj.ama || 0) / total) * totalPct : 0;
+      const nesPct = totalPct - amaPct;
+
+      const col = document.createElement('div');
+      col.className = 'chart-col';
+
+      const countEl = document.createElement('div');
+      countEl.className = 'chart-count';
+      countEl.textContent = total > 0 ? total : '';
+
+      const wrap = document.createElement('div');
+      wrap.className = 'chart-bar-wrap';
+      wrap.style.height = '60px';
+
+      const stack = document.createElement('div');
+      stack.className = 'chart-bar-stack';
+      stack.style.height = `${Math.max(totalPct, total > 0 ? 4 : 0)}%`;
+
+      if (obj.ama > 0) {
+        const seg = document.createElement('div');
+        seg.className = 'chart-bar-seg';
+        seg.style.height = `${(obj.ama / total) * 100}%`;
+        seg.style.background = 'var(--ama-color)';
+        seg.style.opacity = isToday ? '1' : '0.65';
+        stack.appendChild(seg);
+      }
+      if (obj.nes > 0) {
+        const seg = document.createElement('div');
+        seg.className = 'chart-bar-seg';
+        seg.style.height = `${(obj.nes / total) * 100}%`;
+        seg.style.background = 'var(--nes-color)';
+        seg.style.opacity = isToday ? '1' : '0.65';
+        stack.appendChild(seg);
+      }
+
+      wrap.appendChild(stack);
+      col.appendChild(countEl);
+      col.appendChild(wrap);
+      chartBarsEl.appendChild(col);
+
+      const [y,m,d] = dateStr.split('-').map(Number);
+      const dt = new Date(y,m-1,d);
+      const dayEl = document.createElement('div');
+      dayEl.className = 'chart-day-label' + (isToday ? ' today' : '');
+      dayEl.textContent = DAYS_SHORT[dt.getDay()];
+      chartDaysEl.appendChild(dayEl);
+    });
+
+    // History
+    const allDates = Object.keys(data.days)
+      .filter(d => calcDayTotal(data.days[d]) > 0)
+      .sort((a,b) => b.localeCompare(a))
+      .slice(0, 14);
+
+    if (allDates.length === 0) {
+      historyList.innerHTML = '<div class="history-empty">No coffee recorded yet.</div>';
+    } else {
+      historyList.innerHTML = '';
+      allDates.forEach(dateStr => {
+        const obj = data.days[dateStr] || { ama: 0, nes: 0 };
+        const isToday = dateStr === today;
+        const total = calcDayTotal(obj);
+        const item = document.createElement('div');
+        item.className = 'history-item' + (isToday ? ' today-item' : '');
+
+        const dateLabel = isToday ? `${fmtDateLabel(dateStr)} · Today` : fmtDateLabel(dateStr);
+        const caf  = calcDayCaffeine(obj);
+        const cost = calcDayCost(obj);
+
+        let pillsHtml = '';
+        if (obj.ama > 0) pillsHtml += `<div class="history-brand-pill"><div class="brand-dot brand-dot-ama"></div><span class="history-brand-count">${obj.ama}</span> AMA</div>`;
+        if (obj.nes > 0) pillsHtml += `<div class="history-brand-pill"><div class="brand-dot brand-dot-nes"></div><span class="history-brand-count">${obj.nes}</span> Nescafé</div>`;
+
+        item.innerHTML = `
+          <div class="history-top">
+            <div>
+              <div class="history-date">${dateLabel}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">${fmtMg(caf)} est. · ${fmtCost(cost)}</div>
+            </div>
+            <div class="history-totals">
+              <div class="history-total-pkts">${total}</div>
+              <div class="history-total-label">packets</div>
+            </div>
+          </div>
+          <div class="history-brands">${pillsHtml}</div>
+        `;
+        historyList.appendChild(item);
+      });
+    }
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  // Brand tab switching
+  tabAma.addEventListener('click', () => setActiveBrand('ama'));
+  tabNes.addEventListener('click', () => setActiveBrand('nes'));
+
+  // Add buttons
+  document.getElementById('addAmaBtn').addEventListener('click', () => {
+    adjustBrandCount('ama', 1);
+    setActiveBrand('ama');
+    renderAll();
+    showToast('AMA Classic added ☕');
+  });
+  document.getElementById('addNesBtn').addEventListener('click', () => {
+    adjustBrandCount('nes', 1);
+    setActiveBrand('nes');
+    renderAll();
+    showToast('Nescafé added ☕');
+  });
+
+  // +/- buttons act on active brand
+  document.getElementById('plusBtn').addEventListener('click', () => {
+    adjustBrandCount(activeBrand, 1);
+    renderAll();
+  });
+  document.getElementById('minusBtn').addEventListener('click', () => {
+    adjustBrandCount(activeBrand, -1);
+    renderAll();
+  });
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (modalOverlay.classList.contains('open') || confirmOverlay.classList.contains('open')) return;
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === '+' || e.key === '=') { adjustBrandCount(activeBrand, 1); renderAll(); }
+    if (e.key === '-') { adjustBrandCount(activeBrand, -1); renderAll(); }
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Settings modal
+  function openModal() {
+    document.getElementById('amaPriceInput').value    = data.brands.ama.price;
+    document.getElementById('amaCaffeineInput').value = data.brands.ama.caffeine;
+    document.getElementById('nesPriceInput').value    = data.brands.nes.price;
+    document.getElementById('nesCaffeineInput').value = data.brands.nes.caffeine;
+    modalOverlay.classList.add('open');
+    document.getElementById('modalClose').focus();
+  }
+  function closeModal() {
+    modalOverlay.classList.remove('open');
+    document.getElementById('settingsBtn').focus();
+  }
+
+  document.getElementById('settingsBtn').addEventListener('click', openModal);
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+
+  // Theme
+  lightBtn.addEventListener('click', () => { data.theme = 'light'; applyTheme('light'); saveData(); });
+  darkBtn.addEventListener('click',  () => { data.theme = 'dark';  applyTheme('dark');  saveData(); });
+
+  // Save settings
+  document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+    const ap = parseFloat(document.getElementById('amaPriceInput').value);
+    const ac = parseFloat(document.getElementById('amaCaffeineInput').value);
+    const np = parseFloat(document.getElementById('nesPriceInput').value);
+    const nc = parseFloat(document.getElementById('nesCaffeineInput').value);
+    if (!isNaN(ap) && ap >= 0) data.brands.ama.price    = ap;
+    if (!isNaN(ac) && ac >= 0) data.brands.ama.caffeine = ac;
+    if (!isNaN(np) && np >= 0) data.brands.nes.price    = np;
+    if (!isNaN(nc) && nc >= 0) data.brands.nes.caffeine = nc;
+    saveData();
+    renderAll();
+    closeModal();
+    showToast('Settings saved ✓');
+  });
+
+  // Delete history
+  document.getElementById('deleteHistoryBtn').addEventListener('click', () => {
+    confirmOverlay.classList.add('open');
+    document.getElementById('confirmProceed').focus();
+  });
+  document.getElementById('confirmCancel').addEventListener('click', () => {
+    confirmOverlay.classList.remove('open');
+  });
+  document.getElementById('confirmProceed').addEventListener('click', () => {
+    data.days = {};
+    saveData();
+    confirmOverlay.classList.remove('open');
+    closeModal();
+    renderAll();
+    showToast('History deleted');
+  });
+  confirmOverlay.addEventListener('click', e => {
+    if (e.target === confirmOverlay) confirmOverlay.classList.remove('open');
+  });
+
+  // Init
+  applyTheme(data.theme || 'dark');
+  setActiveBrand('ama');
+  renderAll();
+</script>
+</body>
+</html>
