@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Coffee Counter</title>
+<style>
+  :root {
+    --bg: #1a1210;
+    --bg2: #221714;
+    --card: #2a1c18;
+    --card2: #321f1a;
+    --text: #f0e6dc;
+    --muted: #9e8478;
+    --accent: #c4874a;
+    --accent-dim: #a06838;
+    --border: #3d2820;
+    --border2: #4a3028;
+    --shadow: rgba(0,0,0,0.4);
+    --bar: #c4874a;
+    --bar-bg: #3d2820;
+    --toast-bg: #2a1c18;
+    --toast-border: #c4874a;
+    --input-bg: #1a1210;
+    --btn-del: #7a2828;
+    --btn-del-hover: #9a3030;
+    --overlay: rgba(10,6,4,0.75);
+    --ama-color: #c4874a;
+    --nes-color: #6a9fc0;
+  }
+  [data-theme="light"] {
+    --bg: #f5efe8;
+    --bg2: #ede5db;
+    --card: #fffaf5;
+    --card2: #fdf5ec;
+    --text: #2a1a10;
+    --muted: #7a5c48;
+    --accent: #9a5c28;
+    --accent-dim: #7a4818;
+    --border: #e0d0c0;
+    --border2: #d0bfac;
+    --shadow: rgba(80,40,20,0.12);
+    --bar: #9a5c28;
+    --bar-bg: #e8ddd0;
+    --toast-bg: #fffaf5;
+    --toast-border: #9a5c28;
+    --input-bg: #f5efe8;
+    --btn-del: #c0392b;
